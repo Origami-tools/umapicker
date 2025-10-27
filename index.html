@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uma Musume Team Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- HEADER -->
+  <header class="bg-pink-600 text-white p-4 flex justify-between items-center shadow">
+    <h1 class="text-2xl font-bold">🐎 Uma Musume Team Builder</h1>
+    <div class="flex gap-3 items-center">
+      <span id="teamLabel" class="font-semibold"></span>
+      <button id="changeTeamBtn" class="bg-white text-pink-600 px-3 py-1 rounded-lg hover:bg-pink-50 font-medium">
+        Changer d’équipe
+      </button>
+      <button id="adminBtn" class="bg-yellow-400 text-white px-3 py-1 rounded-lg hover:bg-yellow-500 font-medium">
+        Mode Admin
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENU PRINCIPAL -->
+  <main id="mainContent" class="flex flex-col md:flex-row flex-1 overflow-hidden hidden">
+    <!-- Liste des Uma -->
+    <section class="w-full md:w-1/2 p-4 overflow-y-auto border-r border-gray-300">
+      <input id="searchInput" type="text" placeholder="🔎 Rechercher une Uma..."
+             class="w-full p-2 border border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring focus:ring-pink-300" />
+      <div id="umaList" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+    </section>
+
+    <!-- Sélection -->
+    <section class="w-full md:w-1/2 p-4 overflow-y-auto">
+      <h2 class="text-xl font-bold mb-2 text-gray-700">Équipe sélectionnée</h2>
+      <div id="selectedList" class="space-y-3 mb-4"></div>
+      <div class="text-center mt-4">
+        <div id="totalScore" class="text-4xl font-extrabold text-pink-600 drop-shadow">0</div>
+        <div class="text-lg font-semibold text-gray-600">sur <span id="maxScore">30</span></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODALES -->
+  <!-- Choix d'équipe -->
+  <div id="teamModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-lg w-80 p-6 text-center">
+      <h2 class="text-xl font-bold mb-3 text-pink-600">Connexion d’équipe</h2>
+      <select id="teamSelect" class="border rounded p-2 w-full mb-3"></select>
+      <input id="teamPasswordInput" type="password" placeholder="Mot de passe" class="border rounded p-2 w-full mb-4" />
+      <div class="flex justify-end gap-2">
+        <button id="teamCancel" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Annuler</button>
+        <button id="teamLogin" class="px-3 py-1 rounded bg-pink-600 text-white hover:bg-pink-700">Se connecter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connexion admin -->
+  <div id="adminModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-lg w-80 p-6 text-center">
+      <h2 class="text-xl font-bold mb-3 text-yellow-600">Connexion Admin</h2>
+      <input id="adminPasswordInput" type="password" placeholder="Mot de passe admin"
+             class="border rounded p-2 w-full mb-4" />
+      <div class="flex justify-end gap-2">
+        <button id="adminCancel" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Annuler</button>
+        <button id="adminLogin" class="px-3 py-1 rounded bg-yellow-500 text-white hover:bg-yellow-600">Connexion</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pseudo -->
+  <div id="nameModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-lg w-80 p-6 text-center">
+      <h2 class="text-lg font-bold mb-3 text-pink-600">Pseudo du joueur</h2>
+      <input id="customNameInput" type="text" placeholder="Nom" class="border rounded p-2 w-full mb-4" />
+      <div class="flex justify-end gap-2">
+        <button id="nameCancel" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Annuler</button>
+        <button id="nameConfirm" class="px-3 py-1 rounded bg-pink-600 text-white hover:bg-pink-700">Valider</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation suppression -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-lg w-80 p-6 text-center">
+      <h2 class="text-lg font-bold mb-3 text-red-600">Supprimer cette Uma ?</h2>
+      <div class="flex justify-end gap-2">
+        <button id="confirmCancel" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Annuler</button>
+        <button id="confirmDelete" class="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panneau admin -->
+  <div id="adminPanel" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white w-11/12 max-w-4xl rounded-2xl shadow-lg p-4 flex flex-col max-h-[90vh] overflow-hidden">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold flex-grow mb-4 text-yellow-600">Panneau d’administration</h2>
+        <button id="closeAdminPanel" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex-shrink-0">Fermer</button>
+      </div>
+      <div class="mb-4">
+        <label class="font-semibold text-gray-700">Score maximum :</label>
+        <input id="adminMaxInput" type="number" min="1" class="border rounded p-1 w-24 text-center ml-2" />
+      </div>
+
+      <div class="border-t pt-4">
+        <h3 class="font-semibold text-gray-700 mb-2">Gestion des équipes</h3>
+        <div id="adminTeamsList" class="flex-1 overflow-y-auto pr-2"></div>
+      </div>
+
+    </div>
+  </div>
+
+   <style>
+    
+    #adminPanel .scrollable {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    }
+    
+    #adminPanel h2 {
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eee;
+    }
+   </style>
+
+  <!-- SCRIPT PRINCIPAL -->
+  <script type="module">
+    
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    window.__uiHooks = {};
+    let authData = {};
+    let umas = [];
+    let selectedUmas = [];
+    let currentTeam = null;
+    let isAdmin = false;
+    let currentTotal = 0;
+    let maxScore = 30;
+
+    // Variables
+    const mainContent = document.getElementById('mainContent');
+    const umaList = document.getElementById('umaList');
+    const selectedList = document.getElementById('selectedList');
+    const totalScoreElem = document.getElementById('totalScore');
+    const maxScoreElem = document.getElementById('maxScore');
+    const searchInput = document.getElementById('searchInput');
+    const teamLabel = document.getElementById('teamLabel');
+
+    const teamModal = document.getElementById('teamModal');
+    const teamSelect = document.getElementById('teamSelect');
+    const teamPasswordInput = document.getElementById('teamPasswordInput');
+
+    const adminModal = document.getElementById('adminModal');
+    const adminPasswordInput = document.getElementById('adminPasswordInput');
+    const adminPanel = document.getElementById('adminPanel');
+    const adminTeamsList = document.getElementById('adminTeamsList');
+    const adminMaxInput = document.getElementById('adminMaxInput');
+    const teamLogin = document.getElementById('teamLogin');
+    const teamCancel = document.getElementById('teamCancel');
+    const adminLogin = document.getElementById('adminLogin');
+    const adminCancel = document.getElementById('adminCancel');
+    const closeAdminPanel = document.getElementById('closeAdminPanel');
+    const addTeamBtn = document.getElementById('addTeamBtn');
+    const newTeamName = document.getElementById('newTeamName');
+    const newTeamPwd = document.getElementById('newTeamPwd');
+
+    // ---------------------------------------------------------------------------
+    // Toast visuel
+    // ---------------------------------------------------------------------------
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-4 right-4 bg-pink-600 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity';
+    document.body.appendChild(toast);
+    function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.remove('opacity-0');
+    setTimeout(() => toast.classList.add('opacity-0'), 2000);
+    }
+
+
+    /* ⚙️ CONFIG FIREBASE */
+    const firebaseConfig = {
+      apiKey: "AIzaSyCKZBpYvgkTs-273GS9PHV9YIjlX6lIwKI",
+      authDomain: "uma-selector-bdc59.firebaseapp.com",
+      databaseURL: "https://uma-selector-bdc59-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "uma-selector-bdc59",
+      storageBucket: "uma-selector-bdc59.firebasestorage.app",
+      messagingSenderId: "204929164113",
+      appId: "1:204929164113:web:af408125a77c437a3f2970"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Affichage de modale
+    function showModal(el) { el.classList.remove('hidden', 'opacity-0'); el.classList.add('flex'); }
+    function hideModal(el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+
+    // LISTE UMA
+    function renderList(filter = '') {
+      umaList.innerHTML = '';
+      umas.filter(u => u.name.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(u => {
+          const card = document.createElement('div');
+          card.className = "bg-white rounded-xl shadow hover:shadow-lg p-2 flex flex-col items-center cursor-pointer";
+          card.innerHTML = `<img src="${u.img}" alt="${u.name}" class="w-20 h-20 object-cover rounded-lg mb-1">
+                            <div class="text-center text-sm font-semibold text-gray-700">${u.name}</div>
+                            <div class="text-xs text-gray-500">Score: ${u.score}</div>`;
+          card.onclick = () => {
+            showModal(nameModal);
+            nameConfirm.onclick = () => {
+              const custom = customNameInput.value.trim();
+              if (custom) addUma(u, custom);
+              customNameInput.value = '';
+              hideModal(nameModal);
+            };
+            nameCancel.onclick = () => hideModal(nameModal);
+          };
+          umaList.appendChild(card);
+        });
+    }
+
+    // AJOUT UMA
+    function addUma(uma, customName) {
+      const copy = { ...uma, customName };
+      selectedUmas.push(copy);
+      currentTotal += uma.score;
+      renderSelected();
+      saveData();
+    }
+
+    // SUPPRESSION UMA
+    function confirmRemove(index) {
+      showModal(confirmModal);
+      confirmDelete.onclick = () => {
+        const uma = selectedUmas[index];
+        currentTotal -= uma.score;
+        selectedUmas.splice(index, 1);
+        renderSelected();
+        saveData();
+        hideModal(confirmModal);
+      };
+      confirmCancel.onclick = () => hideModal(confirmModal);
+    }
+
+    // RENDU SÉLECTION
+    function renderSelected() {
+      selectedList.innerHTML = '';
+      selectedUmas.forEach((u, i) => {
+        const div = document.createElement('div');
+        div.className = "flex items-center bg-white rounded-lg shadow p-2 justify-between";
+        div.innerHTML = `
+          <div class="flex items-center gap-3">
+            <img src="${u.img}" class="w-12 h-12 rounded-lg" />
+            <div>
+              <div class="font-semibold">${u.name}</div>
+              <div class="text-sm text-gray-500">${u.customName}</div>
+            </div>
+          </div>
+          <button class="text-red-500 font-bold text-lg hover:text-red-700">×</button>
+        `;
+        div.querySelector('button').onclick = () => confirmRemove(i);
+        selectedList.appendChild(div);
+      });
+      totalScoreElem.textContent = currentTotal;
+      totalScoreElem.classList.toggle('text-green-600', currentTotal <= maxScore);
+      totalScoreElem.classList.toggle('text-red-600', currentTotal > maxScore);
+    }
+
+    searchInput.oninput = e => renderList(e.target.value);
+
+    // Hooks
+    window.__uiHooks.renderSelected = renderSelected;
+    window.__uiHooks.renderUmaList = () => renderList(searchInput.value);
+    window.__uiHooks.setUmas = u => { umas = u; renderList(searchInput.value); };
+
+    // Boutons connexion
+    changeTeamBtn.onclick = () => showModal(teamModal);
+    adminBtn.onclick = () => {
+      if(!isAdmin) {
+        showModal(adminModal)
+      }
+      else {
+        showAdminPanel()
+      }
+    };
+
+    // On masque le contenu tant qu’on n’est pas connecté
+    mainContent.classList.add('hidden');
+
+    // ---------------------------------------------------------------------------
+    // Chargement initial des données depuis Firebase
+    // ---------------------------------------------------------------------------
+    async function initData() {
+      listenData();
+    }
+
+    // Synchronisation en temps réel
+    function listenData() {
+      onValue(ref(db, '/'), snap => {
+        const data = snap.val() || {};
+        authData = data.auth || {};
+        maxScore = data.settings?.maxScore || 30;
+        umas = data.umas || [];
+
+        // Rafraîchir interface
+        maxScoreElem.textContent = maxScore;
+        if (window.__uiHooks?.setUmas) window.__uiHooks.setUmas(umas);
+        refreshTeamSelect();
+        if (isAdmin) renderAdminPanel();
+        
+        const savedTeam = localStorage.getItem('uma_team');
+        const adminPass = localStorage.getItem('admin_pass');
+        const savedPass = localStorage.getItem('uma_pass');
+        if (!currentTeam && savedTeam && savedPass && authData[savedTeam] === savedPass) {
+        currentTeam = savedTeam;
+        isAdmin = (adminPass === authData["Admin"]);
+        hideModal(teamModal);
+        hideModal(adminModal);
+        showMain();
+        loadTeam(currentTeam);
+        }
+        else if(!currentTeam){
+        showModal(teamModal);
+        }
+      });
+    }
+
+    // ---------------------------------------------------------------------------
+    // Connexion ÉQUIPE
+    // ---------------------------------------------------------------------------
+    function refreshTeamSelect() {
+      teamSelect.innerHTML = '';
+      Object.keys(authData).filter(t => t !== "Admin").forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        teamSelect.appendChild(opt);
+      });
+    }
+
+    teamLogin.onclick = async () => {
+      const team = teamSelect.value;
+      const pass = teamPasswordInput.value;
+      if (authData[team] && authData[team] === pass) {
+        currentTeam = team;
+        localStorage.setItem('uma_team', team);
+        localStorage.setItem('uma_pass', pass);
+        hideModal(teamModal);
+        showMain();
+        loadTeam(team);
+            showToast(`Connecté à ${team}`);
+        } else {
+            showToast("Mot de passe incorrect.");
+        }
+    };
+    teamCancel.onclick = () => hideModal(teamModal);
+
+    // ---------------------------------------------------------------------------
+    // Connexion ADMIN
+    // ---------------------------------------------------------------------------
+    adminLogin.onclick = async () => {
+    const pass = adminPasswordInput.value;
+    if (authData["Admin"] && authData["Admin"] === pass) {
+        isAdmin = true;
+        localStorage.setItem('admin_pass', pass);
+        hideModal(adminModal);
+        showMain();
+        showAdminPanel();
+        showToast("Mode administrateur activé");
+    } else {
+        showToast("Mot de passe incorrect.");
+    }
+    };
+    adminCancel.onclick = () => hideModal(adminModal);
+
+    // ---------------------------------------------------------------------------
+    // Panneau admin : gestion des équipes + édition des scores Uma
+    // ---------------------------------------------------------------------------
+  function renderAdminPanel() {
+    adminTeamsList.innerHTML = '';
+
+    // --- 🧩 Liste des équipes existantes ---
+    Object.entries(authData).forEach(([team, pwd]) => {
+      if (team === "Admin") return;
+      const div = document.createElement('div');
+      div.className = "flex items-center gap-2 border p-2 rounded";
+      div.innerHTML = `
+        <input type="text" value="${team}" class="team-name flex-1 border rounded p-1" />
+        <input type="password" value="${pwd}" class="team-pass flex-1 border rounded p-1" />
+        <button class="save bg-green-500 text-white px-2 py-1 rounded">💾</button>
+        <button class="delete bg-red-500 text-white px-2 py-1 rounded">🗑️</button>
+      `;
+
+      const saveBtn = div.querySelector('.save');
+      const delBtn = div.querySelector('.delete');
+
+      saveBtn.onclick = async () => {
+        const newName = div.querySelector('.team-name').value.trim();
+        const newPass = div.querySelector('.team-pass').value.trim();
+        if (!newName || !newPass) return;
+
+        if (newName !== team) {
+          // Renommage d'équipe
+          delete authData[team];
+          authData[newName] = newPass;
+
+          // Copier les données d'équipe si existantes
+          const oldDataSnap = await get(ref(db, `/teams/${team}`));
+          if (oldDataSnap.exists()) {
+            await set(ref(db, `/teams/${newName}`), oldDataSnap.val());
+            await remove(ref(db, `/teams/${team}`));
+          }
+        } else {
+          authData[team] = newPass;
+        }
+
+        await set(ref(db, '/auth'), authData);
+        showToast("Équipe modifiée !");
+        renderAdminPanel();
+        refreshTeamSelect();
+      };
+
+      delBtn.onclick = async () => {
+        if (!confirm(`Supprimer définitivement ${team} ?`)) return;
+        delete authData[team];
+        await set(ref(db, '/auth'), authData);
+        await remove(ref(db, `/teams/${team}`));
+        showToast("Équipe supprimée !");
+        renderAdminPanel();
+        refreshTeamSelect();
+      };
+
+      adminTeamsList.appendChild(div);
+    });
+
+  // --- ➕ Formulaire d’ajout de nouvelle équipe ---
+    const addSection = document.createElement('div');
+    addSection.className = "mt-4 border-t pt-4";
+    addSection.innerHTML = `
+        <h3 class="text-lg font-bold mb-2">Ajouter une équipe</h3>
+        <div class="flex items-center gap-2 mb-2">
+        <input type="text" id="newTeamName" placeholder="Nom" class="flex-1 border rounded p-1" />
+        <input type="password" id="newTeamPwd" placeholder="Mot de passe" class="flex-1 border rounded p-1" />
+        <button id="addTeamBtn" class="bg-blue-500 text-white px-2 py-1 rounded">➕</button>
+        </div>
+    `;
+    adminTeamsList.appendChild(addSection);
+
+    // Événement d’ajout d’équipe
+    addSection.querySelector('#addTeamBtn').onclick = async () => {
+        const name = addSection.querySelector('#newTeamName').value.trim();
+        const pass = addSection.querySelector('#newTeamPwd').value.trim();
+        if (!name || !pass) return;
+
+        authData[name] = pass;
+        await update(ref(db, '/auth'), authData);
+        await set(ref(db, `/teams/${name}`), { selected: [], total: 0 });
+
+        addSection.querySelector('#newTeamName').value = '';
+        addSection.querySelector('#newTeamPwd').value = '';
+        showToast("Nouvelle équipe ajoutée !");
+        renderAdminPanel();
+        refreshTeamSelect();
+    };
+
+    // --- 🐴 Section édition des scores Uma ---
+    const umaEditSection = document.createElement('div');
+    umaEditSection.className = "bg-white max-w-4xl rounded-2xl shadow-lg p-4 flex flex-col max-h-[90vh] overflow-auto";
+    umaEditSection.innerHTML = `
+        <h3 class="text-lg font-bold mb-2">Scores Uma</h3>
+        <input type="text" id="umaSearch" placeholder="Rechercher une Uma..." class="w-full border rounded p-2 mb-3" />
+        <div id="umaListContainer" class=></div>
+    `;
+
+    const umaListContainer = umaEditSection.querySelector('#umaListContainer');
+
+    function renderUmaList(filter = "") {
+        umaListContainer.innerHTML = "";
+        umas
+        .filter(u => u.name.toLowerCase().includes(filter.toLowerCase()))
+        .forEach((u, index) => {
+            const row = document.createElement('div');
+            row.className = "flex items-center gap-2 mb-1";
+            row.innerHTML = `
+            <span class="flex-1">${u.name}</span>
+            <input type="number" min="0" max="30" value="${u.score || 0}" class="w-16 border rounded p-1 uma-score-input" />
+            <button class="saveUma bg-green-500 text-white px-2 py-1 rounded">💾</button>
+            `;
+
+            // Sauvegarde score Uma
+            row.querySelector('.saveUma').onclick = async () => {
+            const newScore = parseInt(row.querySelector('.uma-score-input').value);
+            if (isNaN(newScore) || newScore < 1) return;
+            umas[index].score = newScore;
+            await set(ref(db, '/umas'), umas);
+            showToast(`Score de ${u.name} mis à jour`);
+            };
+
+            umaListContainer.appendChild(row);
+        });
+    }
+
+    renderUmaList();
+    umaEditSection.querySelector('#umaSearch').oninput = e => {
+        renderUmaList(e.target.value);
+    };
+
+    adminTeamsList.appendChild(umaEditSection);
+
+    // --- Score max global ---
+    adminMaxInput.value = maxScore;
+    }
+
+
+    adminMaxInput.onchange = async () => {
+    const newMax = parseInt(adminMaxInput.value);
+    if (!isNaN(newMax)) {
+        maxScore = newMax;
+        await update(ref(db, '/settings'), { maxScore: newMax });
+        showToast("Score max mis à jour !");
+    }
+    };
+
+    function showAdminPanel() { showModal(adminPanel); renderAdminPanel(); }
+    closeAdminPanel.onclick = () => hideModal(adminPanel);
+
+    // ---------------------------------------------------------------------------
+    // Sauvegarde sélection équipe
+    // ---------------------------------------------------------------------------
+    async function saveData() {
+      if (!currentTeam) return;
+      await update(ref(db, `/teams/${currentTeam}`), {
+        selected: selectedUmas,
+        total: currentTotal
+      });
+    }
+
+    // Chargement des données d’équipe
+    async function loadTeam(team) {
+      const snap = await get(ref(db, `/teams/${team}`));
+      if (snap.exists()) {
+        const data = snap.val();
+        selectedUmas = data.selected || [];
+        currentTotal = data.total || 0;
+        if (window.__uiHooks?.renderSelected) window.__uiHooks.renderSelected();
+      } else {
+        selectedUmas = [];
+        currentTotal = 0;
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Helpers interface
+    // ---------------------------------------------------------------------------
+    function showMain() {
+      teamLabel.textContent = `Équipe : ${currentTeam}`;
+      mainContent.classList.remove('hidden');
+      loadTeam(currentTeam);
+    }
+
+    // ---------------------------------------------------------------------------
+    // Auto-connexion si déjà stockée
+    // ---------------------------------------------------------------------------
+    initData();
+</script>
