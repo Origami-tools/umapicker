@@ -232,8 +232,7 @@
       const copy = { ...uma, customName };
       selectedUmas.push(copy);
       currentTotal += uma.score;
-      maxScore = selectedUmas.length*2;
-      maxScoreElem.textContent = maxScore;
+      maxScoreElem.textContent += 2;
       renderSelected();
       saveData();
     }
@@ -244,6 +243,7 @@
       confirmDelete.onclick = () => {
         const uma = selectedUmas[index];
         currentTotal -= uma.score;
+        maxScoreElem.textContent -= 2;
         selectedUmas.splice(index, 1);
         renderSelected();
         saveData();
